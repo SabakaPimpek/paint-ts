@@ -1,5 +1,8 @@
 import PhaserLogo from '../objects/phaserLogo'
 import FpsText from '../objects/fpsText'
+import Tool from '../objects/Tool'
+// import Brush from '../objects/Tool'
+// import Crayon from '../objects/Tool'
 
 const enum Color {
   LightBlue = 0xa3b7bc,
@@ -24,6 +27,8 @@ const enum Size {
   Big = 100,
   Huge = 130
 }
+
+let isMouseOverTexture: boolean = false;
 
 export default class MainScene extends Phaser.Scene {
   fpsText: any
@@ -50,60 +55,46 @@ export default class MainScene extends Phaser.Scene {
       tool: this.add.group(),
       size: this.add.group()
     };
-
-    this.tools = {
-      brush: this.add.sprite(-50, -50, 'brush').setOrigin(0.5, 0.5).setData('tool', 'brush').setData('tool', 'brush'),
-      crayon: this.add.circle(-100, - 100,  Size.Huge, Color.Black  ).setData('tool', 'crayon'),
-      eraser: this.add.circle(-100, - 100, Size.Huge, Color.Black ).setData('tool', 'eraser'),
-    }
+    
   }
-
+  
   create() {
-
+    
     const ScreenWidth = Number(this.game.config.width);
     const screenHeight = Number(this.game.config.height);
-
+    
     this.add.rectangle(0,0, 365, screenHeight, 0x000000).setOrigin(0).setAlpha(0.4);
     this.add.rectangle(0,0, 360, screenHeight, 0xA3B7BC).setOrigin(0);
     
-    this.rt = this.add.renderTexture(ScreenWidth/2, screenHeight/2, ScreenWidth, screenHeight).setOrigin(0.5).setDepth(-2);
-
     this.createButtons();
-
+    this.rt = this.add.renderTexture(ScreenWidth/2, screenHeight/2, ScreenWidth, screenHeight).setOrigin(0.5).setDepth(-2);
+    this.tools = new Tool(this, this.rt)
+    
+    this.setTool(this.tools.Brush);
+    this.setColor(Color.Black)
+    this.setToolSize(Size.Huge)
+    
+    
     this.rt.setInteractive();
-
+    
     this.rt.on('pointermove', pointer =>
     {
       if (pointer.isDown)
       {
-        const points = pointer.getInterpolatedPosition(20);
-        points.forEach(p =>
-          {
-            // tool.setAngle(0)
-
-              this.rt.draw(this.settings.selectedTool, p.x, p.y)
-              
-          });
-        }
-
+        this.settings.selectedTool.draw(pointer)
+      }
+      
     }, this);
-
+    
     this.rt.on('pointerdown', pointer => {
-      let angle = Phaser.Math.Between(0,360);
-
-      // tool.setAngle(angle)
-      this.rt.draw(this.settings.selectedTool, pointer.x, pointer.y)
-
-    })
-
-    this.setTool(this.tools.brush);
-    this.setColor(Color.Black)
-    this.setToolSize(Size.Huge)
-}
-
-update() {
-  // this.fpsText.update()
-}
+      this.settings.selectedTool.draw(pointer)
+      isMouseOverTexture = this.rt.getBounds().contains(pointer.x, pointer.y);
+    }) 
+  }
+  
+  update() {
+    
+  }
 
 createButtons() {
   
@@ -148,27 +139,27 @@ createButtons() {
     const eraser = this.add.sprite(100, 300, 'spritesheet', 'eraser.png')
     .setInteractive()
     .on('pointerdown', () => {
-      this.setTool(this.tools.eraser);
+      this.setTool(this.tools.Eraser);
     });
 
     const crayon = this.add.sprite(70, 550, 'spritesheet', 'crayon.png').setDepth(2)
     .setInteractive()
     .on('pointerdown', () => {
-      this.setTool(this.tools.crayon);
+      this.setTool(this.tools.Crayon);
     });
     const crayonStroke = this.add.sprite(70, 550, 'spritesheet', 'crayonStroke.png').setAlpha(0).setData('tool', 'crayon')
     
     const brush = this.add.sprite(150, 550, 'spritesheet', 'brush.png').setDepth(2)
     .setInteractive()
     .on('pointerdown', () => {
-      this.setTool(this.tools.brush);
+      this.setTool(this.tools.Brush);
     });
     const brushStroke = this.add.sprite(150, 550, 'spritesheet', 'brushStroke.png').setAlpha(0).setData('tool', 'brush')
     
     const spray = this.add.sprite(285, 550, 'spritesheet', 'spray.png').setDepth(2)
     .setInteractive()
     .on('pointerdown', () => {
-      this.setTool('spray');
+      this.setTool(this.tools.Spray);
     });
     const sprayStroke = this.add.sprite(285, 550, 'spritesheet', 'sprayStroke.png').setAlpha(0).setData('tool', 'spray')
     
@@ -180,7 +171,7 @@ createButtons() {
     const columns = 3;
     const rows = 4; // Ilość wierszy
     
-    const colors: number[] = [
+    const colors: Color[] = [
       Color.Cream,
       Color.Red,
       Color.Orange,
@@ -210,7 +201,7 @@ createButtons() {
         .setDepth(2)
         .setInteractive()
         .on('pointerdown', () => {
-          if(this.settings.selectedTool === this.tools.eraser) this.setTool(this.tools.brush)
+          if(this.settings.selectedTool === this.tools.eraser) this.setTool(this.tools.Brush)
           this.setColor(colors[number-1]);
         }) // Tworzy sprita
         
@@ -232,14 +223,13 @@ createButtons() {
       else element.setAlpha(0);
     });
 
-    this.tools.brush.setTintFill(color);
-    this.tools.crayon.setFillStyle(color);
-    this.tools.eraser.setFillStyle(Color.White);
+    this.tools.changeColor(color)
   }
 
   setTool(tool)
   {
     this.settings.selectedTool = tool;
+
     this.strokeButtons.tool.getChildren().forEach(element => {
       if(element.getData('tool') === tool.getData('tool')) element.setAlpha(1)
       else element.setAlpha(0)
@@ -256,9 +246,8 @@ createButtons() {
       else element.setAlpha(0)
     })
 
-    this.tools.brush.setDisplaySize(size, size)
-    this.tools.crayon.setDisplaySize(size*0.5, size*0.5)
-    this.tools.eraser.setDisplaySize(size, size)
+    this.tools.changeSize(size)
+
   }
 
   showNewCard()
