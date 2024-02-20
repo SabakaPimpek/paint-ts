@@ -13,7 +13,6 @@ const enum Color {
     Brown = 0x4b3a38,
     Black = 0x1a1919,
     White = 0xFFFFFF,
-    Blue
 }
   
   const enum Size {
@@ -73,6 +72,7 @@ class Brush extends Phaser.GameObjects.Sprite {
     
     public draw(pointer: Phaser.Input.Pointer) {
         const points = pointer.getInterpolatedPosition(20);
+        // this.renderTexture.draw(this, pointer.x, pointer.y)
 
         points.forEach(p =>
             {
@@ -103,45 +103,25 @@ class Brush extends Phaser.GameObjects.Sprite {
         public draw(pointer: Phaser.Input.Pointer) {
             if (pointer.isDown) {
                 this.clear();
-                this.setAlpha(0);
+                this.setAlpha(1);
                 this.lineStyle(this.size, this.color);
-        
+                
                 const localX = pointer.x - this.x;
                 const localY = pointer.y - this.y;
-        
+                
                 this.beginPath();
                 this.moveTo(pointer.prevPosition.x - this.x, pointer.prevPosition.y - this.y);
-
+                
                 this.lineTo(localX, localY);
-        
+                
                 this.strokePath();
-
-                this.setAlpha(1);
+                
                 this.renderTexture.draw(this);
+                this.setAlpha(0);
             }
         }
     }
     
-    // class Crayon extends Phaser.GameObjects.Arc {
-    //     renderTexture: Phaser.GameObjects.RenderTexture;
-    
-    //     constructor(scene: Phaser.Scene, renderTexture: Phaser.GameObjects.RenderTexture) {
-    //         super(scene, -400, -400, 50, undefined, undefined, undefined, 0x000000);
-    
-    //         scene.add.existing(this);
-    //         this.setData('tool', 'crayon')
-    
-    //         this.renderTexture = renderTexture;
-    //     }
-    
-    //     public draw(pointer: Phaser.Input.Pointer) {
-    //         const points = pointer.getInterpolatedPosition(30);
-    //         points.forEach(p => {
-    //             this.renderTexture.draw(this, p.x, p.y)
-    //         });
-    //     }
-    // }
-
     class Spray extends Phaser.GameObjects.Arc {
         renderTexture: Phaser.GameObjects.RenderTexture;
 
@@ -155,15 +135,15 @@ class Brush extends Phaser.GameObjects.Sprite {
         }
     
         public draw(pointer: Phaser.Input.Pointer) {
-            var sprayRadius = 60;
-            var sprayDensity = 30;
+            const sprayRadius = 60;
+            const sprayDensity = 30;
         
             for (var i = 0; i < sprayDensity; i++) {
-                var angle = Phaser.Math.RND.angle(); // Losowy kąt
-                var distance = Phaser.Math.RND.between(0, sprayRadius); // Losowa odległość w zakresie promienia
+                const angle = Phaser.Math.RND.angle(); // Losowy kąt
+                const distance = Phaser.Math.RND.between(0, sprayRadius); // Losowa odległość w zakresie promienia
         
-                var offsetX = Math.cos(angle) * distance;
-                var offsetY = Math.sin(angle) * distance;
+                const offsetX = Math.cos(angle) * distance;
+                const offsetY = Math.sin(angle) * distance;
         
                 // Rysuj kółko na render texture
                 this.renderTexture.draw(

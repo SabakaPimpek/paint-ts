@@ -59,9 +59,15 @@ export default class MainScene extends Phaser.Scene {
   }
   
   create() {
+
     
     const ScreenWidth = Number(this.game.config.width);
     const screenHeight = Number(this.game.config.height);
+
+    this.add.text(10, screenHeight-20, '0.3v', {
+      fontSize: '20px',
+      color: '#fff'
+  }).setDepth(10);
     
     this.add.rectangle(0,0, 365, screenHeight, 0x000000).setOrigin(0).setAlpha(0.4);
     this.add.rectangle(0,0, 360, screenHeight, 0xA3B7BC).setOrigin(0);
@@ -87,13 +93,18 @@ export default class MainScene extends Phaser.Scene {
     }, this);
     
     this.rt.on('pointerdown', pointer => {
-      this.settings.selectedTool.draw(pointer)
-      isMouseOverTexture = this.rt.getBounds().contains(pointer.x, pointer.y);
+      this.settings.selectedTool.x = -20000;
+      this.rt.draw(this.settings.selectedTool, pointer.x, pointer.y)
+    
     }) 
   }
   
   update() {
-    
+      
+    if ((this.settings.selectedTool === this.tools.Spray) && this.input.activePointer.isDown)
+    {
+      this.settings.selectedTool.draw(this.input.activePointer)
+    }
   }
 
 createButtons() {
@@ -252,8 +263,6 @@ createButtons() {
 
   showNewCard()
   {
-    this.scene.pause()
-
     this.scene.pause();
 
     this.scene.launch('newCardScene')
@@ -272,7 +281,7 @@ createButtons() {
 
   eraseScreen()
   {
-    this.hideNewCard();
     this.rt.clear();
+    this.hideNewCard();
   }
 }
